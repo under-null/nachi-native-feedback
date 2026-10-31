@@ -38,6 +38,7 @@ is reproducible; full pose/raw-capture claims require the retained private evide
 `scripts/check_release.py` checks the intended source tree and optional wheel/
 source archives for private-path patterns, site-looking endpoints, MAC addresses,
 credential patterns and unexpected binary/vendor files. It is a content check,
-not a guarantee against every possible form of private information. `.gitignore`
+and packaged file hashes must agree with the reviewed manifest. It is not a
+guarantee against every possible form of private information. `.gitignore`
 also excludes generated runs and local captures. Review staged files before a
 future publication; a local recording is not automatically safe to redistribute.

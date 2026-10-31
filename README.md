@@ -29,23 +29,37 @@ a robot. This project makes no manufacturer-approval or license-entitlement clai
 ## Install and try offline
 
 Python 3.12 or newer is required; validation currently covers Python 3.12 on
-Windows. From this repository:
+Windows. Install Python with pip and, if you want the optional GUI, Tcl/Tk
+support. Check `python --version`, then open PowerShell in this repository.
+These commands use a virtual environment directly, so activation and changes
+to PowerShell execution policy are unnecessary:
 
-```console
-python -m pip install ".[test]"
-nachi-feedback demo --samples 20
-nachi-feedback request
-python -m pytest -q
-python scripts/verify_results.py
-python scripts/check_release.py
+```powershell
+python -m venv .venv
+.\.venv\Scripts\python.exe -m pip install ".[test]"
+.\.venv\Scripts\python.exe -m nachi_native_feedback demo --samples 20
+.\.venv\Scripts\python.exe -m nachi_native_feedback request
+.\.venv\Scripts\python.exe -m pytest -q
+.\.venv\Scripts\python.exe scripts/verify_results.py
+.\.venv\Scripts\python.exe scripts/check_release.py --verify-manifest
 ```
 
-These commands do not contact a controller. The demo uses fabricated values.
+The first install may download build/test dependencies. These commands do not
+contact a controller. The demo uses fabricated values. For a runtime-only
+install, omit `[test]`; the package itself has no third-party runtime dependency.
+The same package layout supports `python -m nachi_native_feedback` when console
+aliases are not on PATH. On other systems a virtual environment usually places
+Python under `.venv/bin/python`; those platforms remain unqualified here.
+
 To replay the derived fixture, which also contains fabricated joint values:
 
-```console
-nachi-feedback replay tests/fixtures/derived-response-shape.bin
+```powershell
+.\.venv\Scripts\python.exe -m nachi_native_feedback replay tests/fixtures/derived-response-shape.bin
 ```
+
+A wheel installation supplies the runtime commands. The repository or source
+archive additionally supplies the fixture, tests, notes and result-verification
+scripts used above.
 
 ## Plan a hardware observation
 
@@ -57,10 +71,10 @@ The following addresses belong to a documentation-only range. Replace them
 with your reviewed target and local interface address. **Without --execute,
 these examples only display plans.**
 
-```console
-nachi-feedback probe --host 192.0.2.2 --source-address 192.0.2.10
-nachi-feedback benchmark --host 192.0.2.2 --source-address 192.0.2.10
-nachi-feedback live --host 192.0.2.2 --source-address 192.0.2.10 --latest-path runs/latest.json --cancel-path runs/cancel.request
+```powershell
+.\.venv\Scripts\python.exe -m nachi_native_feedback probe --host 192.0.2.2 --source-address 192.0.2.10
+.\.venv\Scripts\python.exe -m nachi_native_feedback benchmark --host 192.0.2.2 --source-address 192.0.2.10
+.\.venv\Scripts\python.exe -m nachi_native_feedback live --host 192.0.2.2 --source-address 192.0.2.10 --latest-path runs/session-01/latest.json --cancel-path runs/session-01/cancel.request
 ```
 
 Only an explicitly reviewed hardware action should add `--execute`. The probe
@@ -69,11 +83,22 @@ over three paced phases within 30 seconds. The live observer permits at most
 6,000 reads over 120 seconds. There is no automatic reconnect or catch-up burst.
 See the plan output for bounds; start with a stationary one-shot comparison.
 
-The optional GUI reads the receiver's local JSON file and has no socket route:
+Before an approved live execution, create a new local run directory; do not
+reuse a previous run's cancellation marker. Status, cancellation and optional
+`--output` result paths must be distinct. Local status-publication failures are
+checked before a connection is attempted.
 
-```console
-nachi-feedback-monitor --data runs/latest.json --cancel-path runs/cancel.request
+```powershell
+New-Item -ItemType Directory -Path runs/session-01
+.\.venv\Scripts\python.exe -m nachi_native_feedback.live_monitor --data runs/session-01/latest.json --cancel-path runs/session-01/cancel.request
 ```
+
+The optional GUI reads only the receiver's local JSON file. Run it in a second
+terminal using the same environment and paths. It displays WAITING until data
+arrives; it does not start the receiver. Tcl/Tk is optional for the rest of the
+package. `python -m nachi_native_feedback.live_monitor --help` works without it.
+After virtual-environment activation, `nachi-feedback` and
+`nachi-feedback-monitor` are equivalent console aliases.
 
 ## Evidence and limitations
 
@@ -82,6 +107,7 @@ nachi-feedback-monitor --data runs/latest.json --cancel-path runs/cancel.request
 - [Provenance](docs/provenance.md): upstream research references and independent implementation.
 - [Privacy](docs/privacy.md): omitted site data and explicit fixture transformations.
 - [Release notes](CHANGELOG.md): draft scope and unresolved work.
+- [Final review](docs/release-review.md): reproducibility, evidence and privacy checks.
 
 Native values numerically matched the tested pendant ANGLE display. Values are
 returned unchanged; the package applies no ROS/model offset or radians conversion.

@@ -2,6 +2,9 @@ from pathlib import Path
 import importlib.util
 import json
 import sys
+import hashlib
+import re
+import zipfile
 
 import pytest
 
@@ -46,3 +49,44 @@ def test_result_files_do_not_contain_recorded_joint_values():
     assert 'recorded joint poses' in result['sanitization']['omitted']
     assert not result['measurement_limits']['controller_sample_age_known']
     assert all('values' not in line for line in (ROOT/'results/pose-observation-timing.csv').read_text().splitlines())
+
+
+def test_all_relative_document_links_resolve():
+    for path in [ROOT/'README.md', *sorted((ROOT/'docs').glob('*.md'))]:
+        for target in re.findall(r'\[[^\]]+\]\(([^)]+)\)', path.read_text(encoding='utf-8')):
+            if target.startswith(('https://', 'http://', '#')):
+                continue
+            assert (path.parent/target.split('#')[0]).is_file(), (path.name, target)
+
+
+@pytest.mark.parametrize('kind', ['valid', 'extra-header', 'changed-runtime', 'duplicate', 'traversal'])
+def test_wheel_check_requires_exact_reviewed_files(tmp_path, kind):
+    checker = script('check_release')
+    root = tmp_path/'reviewed'; root.mkdir()
+    license_body = (ROOT/'LICENSE').read_bytes()
+    (root/'LICENSE').write_bytes(license_body)
+    contents = {'nachi_native_feedback/'+name: (ROOT/'src/nachi_native_feedback'/name).read_bytes()
+                for name in checker.RUNTIME_FILES}
+    manifest = {'src/'+name: hashlib.sha256(body).hexdigest() for name, body in contents.items()}
+    (root/'release-manifest.json').write_text(json.dumps({'files': manifest}))
+    metadata = 'nachi_native_feedback-0.1.0.dev0.dist-info/'
+    contents.update({metadata+name: license_body if name == 'licenses/LICENSE' else b'metadata'
+                     for name in checker.WHEEL_METADATA})
+    if kind == 'extra-header':
+        contents['nachi_native_feedback/unreviewed.h'] = b'Unexpected header'
+    elif kind == 'changed-runtime':
+        contents['nachi_native_feedback/protocol.py'] += b'\n# unexpected change\n'
+    elif kind == 'traversal':
+        contents['../outside.py'] = b'bad path'
+    archive = tmp_path/'candidate.whl'
+    with zipfile.ZipFile(archive, 'w') as bundle:
+        for name, body in contents.items():
+            bundle.writestr(name, body)
+        if kind == 'duplicate':
+            with pytest.warns(UserWarning):
+                bundle.writestr('nachi_native_feedback/protocol.py', b'duplicate')
+    if kind == 'valid':
+        assert checker.check(root, archive)['archive_matches_reviewed_manifest']
+    else:
+        with pytest.raises(ValueError):
+            checker.check(root, archive)

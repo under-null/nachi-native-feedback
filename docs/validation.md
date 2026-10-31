@@ -1,14 +1,16 @@
 # Release validation
 
 Version: 0.1.0.dev0, local unpublished draft. The extracted package passes
-**775 offline tests** on Python 3.12 / Windows. Tests prohibit real sockets and
+**813 offline tests** on Python 3.12 / Windows. Tests prohibit real sockets and
 DNS; transport tests inject fake streams. The optional GUI is not opened during
-tests. Tk is imported only when its GUI entry point is invoked.
+tests. GUI help works without Tk; Tk is imported only after argument/path checks
+when a display is actually requested.
 
 Coverage includes every two-chunk boundary and truncated EOF of a synthetic
 frame, coalescing, malformed headers/XML/numbers, optional reply fields, partial
 writes, timeouts, bounded pacing, no automatic reconnect/catch-up, cancellation,
-receipt freshness, publication failure and plan-only defaults. A passing test
+receipt freshness, publication failure, malformed display files, local-output
+preflight, reviewed archive contents and plan-only defaults. A passing test
 count is not a controller compatibility or safety certificate.
 
 `scripts/verify_results.py` also checks all **250 stationary** and **5,740
@@ -19,7 +21,14 @@ hardware from private raw evidence that is deliberately not distributed.
 `scripts/check_release.py` checks the source tree and packaged archives for
 unexpected content and common private-data patterns. The separate preparation
 review additionally compares against private identifiers outside this repository.
-No private identifier list is embedded in the public checker.
+No private identifier list is embedded in the public checker. Archive checks also
+require the package contents/hashes to match the reviewed source manifest.
+
+The final review independently rechecked all 5,990 timing rows against retained
+private source records, decoded all 5,990 corresponding raw reply frames, and
+checked the reported 705 distinct tuples and two pose marks. These private
+records remain excluded. See [the review](release-review.md) for the distinction
+between public arithmetic checks and retained hardware evidence.
 
 The source manifest records SHA-256 for every intended release file except the
 manifest itself. Verify it with:

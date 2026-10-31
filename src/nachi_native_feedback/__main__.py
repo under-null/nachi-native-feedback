@@ -93,6 +93,12 @@ def main():
         child.add_argument('--output', type=Path, help='Save JSON locally')
     args = parser.parse_args()
     try:
+        if args.command == 'live':
+            paths = [args.latest_path.resolve(), args.cancel_path.resolve()]
+            if args.output is not None:
+                paths.append(args.output.resolve())
+            if len(set(paths)) != len(paths):
+                raise ValueError('Status, cancellation and optional output must be different files')
         if args.command == 'demo':
             result = demo(args.samples)
         elif args.command == 'replay':

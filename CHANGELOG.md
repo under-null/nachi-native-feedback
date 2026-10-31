@@ -7,6 +7,8 @@
 - Include offline transport/parser/freshness tests and fabricated packet fixtures.
 - Publish sanitized timing data from one stationary and one pendant-pose hardware experiment.
 - Document known protocol facts, provenance, privacy transformations and unsupported scope.
+- Final review: explicit virtual-environment instructions, preconnection local-file
+  checks, malformed-display handling, optional-Tk help and manifest-checked archives.
 
 No remote, public repository, package-registry upload or published release exists
 as part of this preparation. This is an unofficial compatibility profile with

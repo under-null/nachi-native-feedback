@@ -53,6 +53,17 @@ def publish_json(path: Path, data):
     os.replace(temporary, path)
 
 
+def validate_live_paths(latest_path: Path, cancel_path: Path):
+    """Validate local destinations without creating a socket or deleting markers."""
+    if latest_path.resolve() == cancel_path.resolve():
+        raise ValueError('Status and cancellation paths must be different files')
+    for path in (latest_path, cancel_path):
+        if not path.parent.is_dir():
+            raise ValueError('Create the status/cancellation parent directories before execution')
+        if path.exists() and not path.is_file():
+            raise ValueError('Status/cancellation paths must name files, not directories')
+
+
 def collect_live(stream, publish, *, clock_ns=time.perf_counter_ns, sleeper=time.sleep,
                  cancelled=lambda: False, deadline_ns=None):
     observer = FeedbackObserver(stale_after=0.5)
@@ -157,15 +168,23 @@ def execute_live(plan: LivePlan, *, latest_path: Path, cancel_path: Path, execut
     started = time.perf_counter_ns()
     result = None
     attempted = False
+    paths_valid = False
     local_endpoint = remote_endpoint = None
 
     def publish(data):
         publish_json(latest_path, data)
 
     try:
+        validate_live_paths(latest_path, cancel_path)
+        paths_valid = True
         if cancel_path.exists():
             return {'state': 'STOPPED_BY_OPERATOR', 'error': None, 'connection_attempted': False,
                     'samples_received': 0, 'records': [], 'plan': plan.describe()}
+        # Fail a local publication problem before any controller contact. This
+        # also replaces a previous run's display with an explicit waiting state.
+        publish({'mode': 'NATIVE_LIVE_OBSERVER', 'state': 'WAITING', 'error': None,
+                 'published_counter_ns': time.perf_counter_ns(),
+                 'sample_received_counter_ns': None, 'samples': 0, 'values': None})
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as stream:
             attempted = True
             stream.settimeout(REPLY_TIMEOUT)
@@ -176,14 +195,15 @@ def execute_live(plan: LivePlan, *, latest_path: Path, cancel_path: Path, execut
                 raise FeedbackError('Connected socket does not match the approved endpoint')
             result = collect_live(stream, publish, cancelled=cancel_path.exists,
                                   deadline_ns=started + MAX_SECONDS * 1_000_000_000)
-    except (OSError, FeedbackError) as exc:
+    except (OSError, ValueError) as exc:
         result = {'state': 'FAILED', 'error': str(exc), 'samples_received': 0, 'records': [], 'wire_capture': None}
-        try:
-            publish({'mode': 'NATIVE_LIVE_OBSERVER', 'state': 'FAILED', 'error': str(exc),
-                     'published_counter_ns': time.perf_counter_ns(), 'sample_received_counter_ns': None,
-                     'samples': 0, 'values': None})
-        except OSError:
-            pass
+        if paths_valid:
+            try:
+                publish({'mode': 'NATIVE_LIVE_OBSERVER', 'state': 'FAILED', 'error': str(exc),
+                         'published_counter_ns': time.perf_counter_ns(), 'sample_received_counter_ns': None,
+                         'samples': 0, 'values': None})
+            except OSError:
+                pass
     return {**result, 'mode': 'EXPLICIT_NATIVE_LIVE_OBSERVER', 'plan': plan.describe(),
             'connection_attempted': attempted, 'local_endpoint': local_endpoint,
             'remote_endpoint': remote_endpoint, 'automatic_reconnect': False,

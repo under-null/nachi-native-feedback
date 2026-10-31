@@ -16,6 +16,12 @@ GENERATED_METADATA = {'PKG-INFO', 'setup.cfg'}
 TOP_DIRS = {'src', 'docs', 'tests', 'results', 'scripts'}
 IGNORED = {'.git', '__pycache__', '.pytest_cache', 'build', 'dist'}
 ALLOWED_SUFFIXES = {'.py', '.md', '.toml', '.json', '.csv', '.xml', '.bin', '.txt', '.in'}
+RUNTIME_FILES = {'__init__.py', '__main__.py', 'framing.py', 'protocol.py',
+                 'observer.py', 'probe.py', 'session.py', 'benchmark.py', 'live.py', 'live_monitor.py'}
+WHEEL_METADATA = {'METADATA', 'WHEEL', 'entry_points.txt', 'top_level.txt', 'RECORD', 'licenses/LICENSE'}
+SDIST_METADATA = {'PKG-INFO', 'setup.cfg'} | {
+    'src/nachi_native_feedback.egg-info/'+name for name in (
+        'PKG-INFO', 'SOURCES.txt', 'dependency_links.txt', 'entry_points.txt', 'requires.txt', 'top_level.txt')}
 DOC_NETS = tuple(ipaddress.ip_network(value) for value in ('192.0.2.0/24', '198.51.100.0/24', '203.0.113.0/24'))
 INVALID_TEST_IPS = {'0.0.0.0', '224.0.0.1', '255.255.255.255'}
 
@@ -25,7 +31,8 @@ def inspect_body(name, body):
         if not condition:
             raise ValueError(name+': '+message)
     path = PurePosixPath(name)
-    require(not path.is_absolute() and '..' not in path.parts, 'unsafe member path')
+    require(not path.is_absolute() and '..' not in path.parts and '\\' not in name and ':' not in name,
+            'unsafe member path')
     require(len(body) <= 8*1024*1024, 'unexpected file size')
     if path.suffix == '.bin':
         require(path.name == 'derived-response-shape.bin', 'unexpected binary fixture')
@@ -66,12 +73,23 @@ def check(root=ROOT, archive=None):
         entries = list(source_files(root))
     elif str(archive).endswith('.whl'):
         with zipfile.ZipFile(archive) as bundle:
+            if bundle.comment or any(item.comment or item.file_size > 8*1024*1024 for item in bundle.infolist()):
+                raise ValueError('Unexpected wheel comment/file size')
             entries = [(item.filename, bundle.read(item)) for item in bundle.infolist() if not item.is_dir()]
-        if any(not (name.startswith('nachi_native_feedback/') or '.dist-info/' in name) for name, _ in entries):
+        packages = {'nachi_native_feedback/'+name for name in RUNTIME_FILES}
+        metadata_roots = {name.split('/')[0] for name, _ in entries if '.dist-info/' in name}
+        if len(metadata_roots) != 1:
+            raise ValueError('Expected one wheel metadata directory')
+        metadata_root = metadata_roots.pop()
+        if not metadata_root.startswith('nachi_native_feedback-'):
+            raise ValueError('Unexpected wheel metadata owner')
+        allowed = packages | {metadata_root+'/'+name for name in WHEEL_METADATA}
+        if {name for name, _ in entries} != allowed:
             raise ValueError('Unexpected wheel contents')
     else:
         with tarfile.open(archive, 'r:gz') as bundle:
             entries = []
+            archive_roots = set()
             for item in bundle.getmembers():
                 if item.isdir():
                     continue
@@ -80,16 +98,40 @@ def check(root=ROOT, archive=None):
                 name = PurePosixPath(item.name)
                 if name.is_absolute() or '..' in name.parts or len(name.parts) < 2:
                     raise ValueError('Unsafe source archive path')
+                archive_roots.add(name.parts[0])
                 stream = bundle.extractfile(item)
                 entries.append(('/'.join(name.parts[1:]), stream.read(8*1024*1024+1)))
+            if len(archive_roots) != 1:
+                raise ValueError('Expected one source archive root')
+    if len({name for name, _ in entries}) != len(entries):
+        raise ValueError('Duplicate release/archive filename')
+    if sum(len(body) for _, body in entries) > 32*1024*1024:
+        raise ValueError('Unexpected release/archive total size')
     for name, body in entries:
         inspect_body(name, body)
         suffix = PurePosixPath(name).suffix.lower()
         if suffix in ('.pdf', '.dll', '.so', '.dat', '.pcap', '.pcapng', '.exe', '.xsd', '.chm'):
             raise ValueError('Vendor/private binary in release')
         checked.append(name)
+    if archive is not None:
+        expected = json.loads((Path(root)/'release-manifest.json').read_text())['files']
+        contents = dict(entries)
+        if str(archive).endswith('.whl'):
+            for name in RUNTIME_FILES:
+                if hashlib.sha256(contents['nachi_native_feedback/'+name]).hexdigest() != expected['src/nachi_native_feedback/'+name]:
+                    raise ValueError('Wheel runtime differs from reviewed source manifest')
+            if contents[metadata_root+'/licenses/LICENSE'] != (Path(root)/'LICENSE').read_bytes():
+                raise ValueError('Wheel license differs from reviewed source')
+        else:
+            if set(contents) != set(expected) | {'release-manifest.json'} | SDIST_METADATA:
+                raise ValueError('Source archive contains missing or unreviewed files')
+            if json.loads(contents['release-manifest.json'])['files'] != expected:
+                raise ValueError('Source archive manifest differs from reviewed repository')
+            if any(hashlib.sha256(contents[name]).hexdigest() != value for name, value in expected.items()):
+                raise ValueError('Source archive differs from reviewed source manifest')
     return {'state': 'PASS_RELEASE_CONTENT_CHECK', 'files_checked': len(checked),
             'controller_contacted': False, 'published': False,
+            'archive_matches_reviewed_manifest': True if archive is not None else None,
             'limit': 'Pattern/allowlist check, not a complete privacy or rights guarantee.'}
 
 

@@ -5,6 +5,12 @@ Windows Python client. These are experiment results, not a compatibility or
 performance claim for every Nachi controller. Site identity and recorded poses
 are omitted. [Sanitization](privacy.md) explains exactly what changed.
 
+The measurements predate release packaging and final-review improvements to
+local-file validation, CLI checks and display error handling. Those improvements
+have offline regression coverage, not an additional hardware run. The fixed
+233-byte read request remains unchanged. The reported timings describe the
+original experiments, not a fresh benchmark of every release revision.
+
 ## First stationary snapshot
 
 One connection, one fixed 233-byte request, one complete 324-byte response.
@@ -28,8 +34,9 @@ its first five replies from the following steady statistics:
 | 50 Hz | 95 | 48.430 | 2.350 ms | 2.856 ms |
 
 In the 50-Hz phase the mean reply interval was 20.648 ms and the mean request
-interval 20.655 ms. Host pacing therefore explains much of the difference from
-50 Hz. This does not determine the controller's maximum rate. The highest-rate
+interval 20.655 ms. This supports the inference that host pacing explains much
+of the difference from 50 Hz; it is not an isolated causal measurement. It does
+not determine the controller's maximum rate. The highest-rate
 phase had 100 total replies over approximately two seconds. Unchanging stationary
 positions do not establish acquisition freshness.
 

@@ -35,9 +35,15 @@ reduce throughput; missed slots do not trigger catch-up bursts or reconnects.
 
 For live observation, use a new directory under ignored `runs/`, ensure no old
 cancel marker exists, and create the output directory before starting the receiver.
+Status and cancellation paths must be distinct files; a result `--output` path
+must also differ. The receiver verifies local status publication before opening
+a socket, so a missing directory or local write failure does not contact hardware.
 The GUI reads only its JSON data file. Its Stop button writes a local cancellation
 marker. Closing the GUI also requests cancellation. Neither action sends a
 controller stop command. Readings expire rather than remaining apparently live.
+Malformed, oversized or invalid local status files display FAILED; a missing
+status file displays WAITING. The display does not substitute its previous values
+for unreadable current data.
 
 Generated JSON can include the endpoint, local endpoint, recorded poses and raw
 reply bytes. Those are useful locally but are **not public-ready by default**.
