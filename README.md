@@ -1,5 +1,7 @@
 # nachi-native-feedback
 
+Created and maintained by [@under-null](https://github.com/under-null).
+
 An unofficial Python implementation of a narrow Nachi native **joint-feedback**
 profile. It connects directly to the XML service without loading an OpenNR SDK
 library or uploading a custom controller program.
