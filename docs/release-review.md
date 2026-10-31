@@ -1,7 +1,7 @@
 # Final local release review
 
-Date: 2026-10-31. Version: 0.1.0.dev0. This draft remains unpublished, with no
-Git remote configured. All review work is offline relative to the robot.
+Date: 2026-10-31. Version: 0.1.0.dev0. This review was completed before public
+source publication. All review work was offline relative to the robot.
 
 ## Onboarding fixes
 

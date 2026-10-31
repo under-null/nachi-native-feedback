@@ -20,6 +20,11 @@ classifiers = [
 [project.optional-dependencies]
 test = ["pytest>=8,<10"]
 
+[project.urls]
+Repository = "https://github.com/under-null/nachi-native-feedback"
+Documentation = "https://github.com/under-null/nachi-native-feedback#readme"
+Issues = "https://github.com/under-null/nachi-native-feedback/issues"
+
 [project.scripts]
 nachi-feedback = "nachi_native_feedback.__main__:main"
 nachi-feedback-monitor = "nachi_native_feedback.live_monitor:main"

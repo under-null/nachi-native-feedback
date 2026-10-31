@@ -4,7 +4,7 @@ An unofficial Python implementation of a narrow Nachi native **joint-feedback**
 profile. It connects directly to the XML service without loading an OpenNR SDK
 library or uploading a custom controller program.
 
-**Local release draft: 0.1.0.dev0. Not published.** Hardware evidence covers one
+**Development preview: 0.1.0.dev0. Read-only feedback.** Hardware evidence covers one
 MZ07L-01 with a CFD controller running system V4.32. Other controller families,
 firmware versions, options and operating modes have not been qualified.
 
@@ -30,7 +30,15 @@ a robot. This project makes no manufacturer-approval or license-entitlement clai
 
 Python 3.12 or newer is required; validation currently covers Python 3.12 on
 Windows. Install Python with pip and, if you want the optional GUI, Tcl/Tk
-support. Check `python --version`, then open PowerShell in this repository.
+support. Get the source with Git, or download and extract the source from the
+repository's Code menu:
+
+```console
+git clone https://github.com/under-null/nachi-native-feedback.git
+cd nachi-native-feedback
+```
+
+Check `python --version`, then open PowerShell in that directory.
 These commands use a virtual environment directly, so activation and changes
 to PowerShell execution policy are unnecessary:
 

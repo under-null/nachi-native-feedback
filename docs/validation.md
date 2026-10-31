@@ -1,6 +1,6 @@
 # Release validation
 
-Version: 0.1.0.dev0, local unpublished draft. The extracted package passes
+Version: 0.1.0.dev0, development preview. The extracted package passes
 **813 offline tests** on Python 3.12 / Windows. Tests prohibit real sockets and
 DNS; transport tests inject fake streams. The optional GUI is not opened during
 tests. GUI help works without Tk; Tk is imported only after argument/path checks
