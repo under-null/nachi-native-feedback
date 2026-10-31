@@ -1,0 +1,9 @@
+<flexData version="1" xmlns="flex.gui">
+  <dataExchange>
+    <dataUpdate seqid="42">
+      <data unit="1" group="Generic" id="SYSTEM!" subid="400" extid="-1" count="6">
+        <r>10.0</r><r>-20.0</r><r>30.0</r><r>-40.0</r><r>50.0</r><r>-60.0</r>
+      </data>
+    </dataUpdate>
+  </dataExchange>
+</flexData>

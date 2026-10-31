@@ -1,0 +1,112 @@
+{
+  "evidence_type": "sanitized_measured_hardware_results",
+  "tested_configuration": {
+    "controller": "CFD",
+    "system_version": "4.32",
+    "robot": "MZ07L-01",
+    "client_platform": "Windows",
+    "connections_per_run": 1
+  },
+  "stationary": {
+    "fixed_read_requests": 250,
+    "responses": 250,
+    "application_tx_bytes": 58250,
+    "application_rx_bytes": 81000,
+    "unique_joint_tuples": 1,
+    "collection_seconds": 16.9612182,
+    "phases": [
+      {
+        "target_hz": 5,
+        "samples": 50,
+        "steady_samples": 45,
+        "reply_hz": 4.983477055301464,
+        "median_reply_ms": 2.3963,
+        "p95_reply_ms": 2.8463,
+        "max_reply_ms": 4.0599,
+        "mean_reply_interval_ms": 200.6631090909091,
+        "min_reply_interval_ms": 198.7171,
+        "max_reply_interval_ms": 202.4194,
+        "reply_interval_stddev_ms": 0.5683189188771751,
+        "mean_send_interval_ms": 200.66434545454544,
+        "median_host_dispatch_lateness_ms": 0.6232,
+        "transactions_exceeding_target_period": 0
+      },
+      {
+        "target_hz": 20,
+        "samples": 100,
+        "steady_samples": 95,
+        "reply_hz": 19.75711485758788,
+        "median_reply_ms": 2.3101,
+        "p95_reply_ms": 2.8873,
+        "max_reply_ms": 2.9807,
+        "mean_reply_interval_ms": 50.61467765957447,
+        "min_reply_interval_ms": 49.9733,
+        "max_reply_interval_ms": 51.6832,
+        "reply_interval_stddev_ms": 0.3582522067619983,
+        "mean_send_interval_ms": 50.613055319148934,
+        "median_host_dispatch_lateness_ms": 0.5576,
+        "transactions_exceeding_target_period": 0
+      },
+      {
+        "target_hz": 50,
+        "samples": 100,
+        "steady_samples": 95,
+        "reply_hz": 48.43049392045312,
+        "median_reply_ms": 2.3503,
+        "p95_reply_ms": 2.8557,
+        "max_reply_ms": 3.7631,
+        "mean_reply_interval_ms": 20.648147872340427,
+        "min_reply_interval_ms": 19.631,
+        "max_reply_interval_ms": 22.7057,
+        "reply_interval_stddev_ms": 0.45667363217648144,
+        "mean_send_interval_ms": 20.65547659574468,
+        "median_host_dispatch_lateness_ms": 0.6352,
+        "transactions_exceeding_target_period": 0
+      }
+    ]
+  },
+  "pose_observation": {
+    "samples": 5740,
+    "frames": 5740,
+    "elapsed_seconds": 118.9962769,
+    "receipt_rate_hz": 48.23816000120418,
+    "median_transaction_ms": 2.483450007275678,
+    "p95_transaction_ms": 2.961099991807714,
+    "max_transaction_ms": 4.648799978895113,
+    "max_reply_interval_ms": 29.9971,
+    "unique_joint_tuples": 705,
+    "all_records_match_raw_frames": true,
+    "fixed_tx_stream_hash_matches": true,
+    "pose_marks_match_recorded_samples": true,
+    "transient_local_publication_errors": 6
+  },
+  "operator_report": {
+    "values_followed_pendant_motion": true,
+    "pose_b_marked": true,
+    "arm_stopped_motors_off_estops_engaged": true,
+    "alarm_or_frozen_display_reported": false
+  },
+  "measurement_limits": {
+    "controller_sample_age_known": false,
+    "motion_command_latency_measured": false,
+    "maximum_reply_rate_determined": false,
+    "long_duration_reliability_established": false
+  },
+  "sanitization": {
+    "timings": "Original durations retained; counter origin shifted to zero.",
+    "omitted": [
+      "endpoints",
+      "MAC addresses",
+      "computer/user names",
+      "wall-clock dates",
+      "recorded joint poses",
+      "private paths",
+      "raw session/configuration files"
+    ],
+    "public_fixtures": "Fabricated values; observed response structure only."
+  },
+  "timing_files": {
+    "stationary-timing.csv": "d19fcd52132b6d2739499b0a383a12d6127a2d4b243f7212a910102753de7f2f",
+    "pose-observation-timing.csv": "a1ebfd666a0c420194bf90cf485de0a4f12efbd5b2bb9654bc248b6985033802"
+  }
+}
